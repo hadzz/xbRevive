@@ -155,7 +155,7 @@ void FlashNand( SFCx* Nand )
 
 		SIZE_T Size = ftell( FlashFile ); // get current file pointer
 
-		printf("File size: %d\n", Size);
+		printf("File Size: %d\n", Size);
 
 		fseek( FlashFile, 0, SEEK_SET ); // seek back to beginning of file
 
