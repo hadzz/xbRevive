@@ -297,7 +297,7 @@ bool ProcessArgs( int argc, const char* argv[ ] )
 int main( int argc, const char* argv[ ] )
 {
 	printf(
-		"SabMoDsoft (R) Xbox 360 Flash Tool (2.0.3206.0)\n"
+		"SabMoDsoft (R) Xbox 360 Flash Tool (2.0.3236.0)\n"
 		"Copyright (C) SabMoDsoft Corporation 1998-2019. All rights reserved.\n"
 		"\n"
 	);
@@ -307,7 +307,7 @@ int main( int argc, const char* argv[ ] )
 	if ( LoadXSidecar( ) )
 	{
 		
-		if ( !ProcessArgs( argc, argv) )
+		if ( !ProcessArgs( argc, argv ) )
 		{
 			PrintUsage( );
 		}
