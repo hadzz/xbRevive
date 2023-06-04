@@ -6,7 +6,7 @@
 
 void PrintUsage( )
 {
-	printf( "Reads and writes Xbox 360 flash to revive consoles\n\nUsage: xbRevive [-Dump | -Flash ]\n" );
+	printf( "Reads and writes Xbox 360 flash to revive consoles\n\nUsage: xbRevive [-dump | -flash ]\n\nFlashing will use the file \"NandToFlash.bin\"\n" );
 }
 
 HANDLE GetSidecar( )
@@ -143,7 +143,7 @@ void FlashNand( SFCx* Nand )
 {
 	FILE* FlashFile;
 
-	if ( fopen_s( &FlashFile, "NandToFlash.bin", "wb+" ) == 0 )
+	if ( fopen_s( &FlashFile, "NandToFlash.bin", "r" ) == 0 )
 	{
 		printf( "[%s] Entering Flashing Mode\n", Nand->GetName( ) );
 
@@ -155,8 +155,11 @@ void FlashNand( SFCx* Nand )
 
 		SIZE_T Size = ftell( FlashFile ); // get current file pointer
 
+		printf("File size: %d\n", Size);
+
 		fseek( FlashFile, 0, SEEK_SET ); // seek back to beginning of file
 
+		
 		if ( Size % Nand->Config.PhysicalBlockSize != 0 )
 		{
 			printf( "File Misaligned to blocks" );
@@ -222,8 +225,9 @@ void FlashNand( SFCx* Nand )
 		Nand->ExitFlashMode( );
 
 		free( BlockBuffer );
-
+		
 		fclose( FlashFile );
+
 	}
 	else
 	{
@@ -233,63 +237,59 @@ void FlashNand( SFCx* Nand )
 
 bool ProcessArgs( int argc, const char* argv[ ] )
 {
-	if ( argc == 1 )
+	if ( argc != 2 )
 		return false;
-
-	for ( int i = 1; i < argc; ++i )
+	
+	if ( strcmp(argv[1], "-dump" ) == 0 )
 	{
-		if ( strcmp( argv[ i ], "Dump" ) == 0 )
+		printf( "Dumping Lmao\n" );
+		
+		auto Sidecar = GetSidecar( );
+
+		if ( Sidecar )
 		{
-			printf( "Dumping Lmao\n" );
+			WCHAR ConsoleNameBuffer[ 0x200 ];
 
-			auto Sidecar = GetSidecar( );
+			XSidecarGetName( Sidecar, ConsoleNameBuffer, 0x200, 0 );
 
-			if ( Sidecar )
-			{
-				WCHAR ConsoleNameBuffer[ 0x200 ];
+			printf( "Connected To: %ws\n", ConsoleNameBuffer );
 
-				XSidecarGetName( Sidecar, ConsoleNameBuffer, 0x200, 0 );
+			SPISidecar Nand = SPISidecar( Sidecar ); // woud be what ever interface they asked for
 
-				printf( "Connected To: %ws\n", ConsoleNameBuffer );
-
-				SPISidecar Nand = SPISidecar( Sidecar ); // woud be what ever interface they asked for
-
-				DumpFlash( &Nand );
-			}
-			else
-			{
-				printf( "Failed To Connect To Sidecar\n" );
-			}
-
-			break;
+			DumpFlash( &Nand );
+		}
+		else
+		{
+			printf( "Failed To Connect To Sidecar\n" );
 		}
 
-		if ( strcmp( argv[ i ], "Flash" ) == 0 )
-		{
-			printf( "Flashing\n" );
-
-			auto Sidecar = GetSidecar( );
-
-			if ( Sidecar )
-			{
-				WCHAR ConsoleNameBuffer[ 0x200 ];
-
-				XSidecarGetName( Sidecar, ConsoleNameBuffer, 0x200, 0 );
-
-				printf( "Connected To: %ws\n", ConsoleNameBuffer );
-
-				SPISidecar Nand = SPISidecar( Sidecar ); // woud be what ever interface they asked for
-
-				FlashNand( &Nand );
-			}
-			else
-			{
-				printf( "Failed To Connect To Sidecar\n" );
-			}
-
-			break;
-		}
 	}
+	else if ( strcmp(argv[1], "-flash" ) == 0 )
+	{
+		printf( "Flashing\n" );
+
+		auto Sidecar = GetSidecar( );
+
+		if ( Sidecar )
+		{
+			WCHAR ConsoleNameBuffer[ 0x200 ];
+
+			XSidecarGetName( Sidecar, ConsoleNameBuffer, 0x200, 0 );
+
+			printf( "Connected To: %ws\n", ConsoleNameBuffer );
+
+			SPISidecar Nand = SPISidecar( Sidecar ); // woud be what ever interface they asked for
+
+			FlashNand( &Nand );
+		}
+		else
+		{
+			printf( "Failed To Connect To Sidecar\n" );
+		}
+
+	}
+	else 
+		return false;
 
 	return true;
 }
@@ -306,12 +306,8 @@ int main( int argc, const char* argv[ ] )
 
 	if ( LoadXSidecar( ) )
 	{
-		const char* TestArgs[ ] = {
-			argv[0],
-			"Dump"
-		};
-
-		if ( !ProcessArgs( ARRAYSIZE( TestArgs ), TestArgs ) )
+		
+		if ( !ProcessArgs( argc, argv) )
 		{
 			PrintUsage( );
 		}
